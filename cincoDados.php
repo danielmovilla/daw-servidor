@@ -1,80 +1,110 @@
 <?php
-        define ('PIEDRA1',  "&#x1F91C;");
-        define ('PIEDRA2',  "&#x1F91B;");
-        define ('TIJERAS',  "&#x1F596;");
-        define ('PAPEL'  ,  "&#x1F91A;" );
-    
-        // 1. Funciones
-            // 1A. Partida (.php) - Primero derecha y luego izquierda
-            $jugador1    = generaNumero();
-            $pinta1      = pintaSalidaDerecha($jugador1);
 
-            $jugador2    = generaNumero();
-            $pinta2      = pintaSalidaIzquierda($jugador2);
+    // 1. Funciones principales
+        $arrayDados = [];
+        $arrayDadosResultado = [];
+        $arrayDados = [
+            1 => "&#9856;",
+            2 => "&#9857;",
+            3 => "&#9858;",
+            4 => "&#9859;",
+            5 => "&#9860;",
+            6 => "&#9861;"
+        ];
+        define("arrayDados", $arrayDados);
+        const ARRAYMENSAJES = ["Ha sucedido un empate.", "¡Ha ganado el jugador 1!", "¡Ha ganado el jugador 2!"];
 
-            $tirada      = tirada($jugador1, $jugador2);
-            // 1B. Mensaje (.php)
-            $mensaje     = generaMensaje($tirada);
-    
-        // 2. Sacamos el resultado
-            function generaNumero(){
-        return random_int(1,3); // Siendo Piedra (1), Papel (2) y Tijeras (3)
-    }
-
-        // 3. Sacamos el resultado de la tirada
-    function tirada($jugador1, $jugador2){
-
-        if ($jugador1 == $jugador2)
-        { return 0; } // Caso de empate
-        if ($jugador1 == 1 && $jugador2 == 2)
-        { return 2; } // 1 - Piedra y 2 - Papel
-        if ($jugador1 == 1 && $jugador2 == 3)
-        { return 1; } // 1 - Piedra y 3 - Tijeras
-        if ($jugador1 == 2 && $jugador2 == 1)
-        { return 1; } // 2 - Papel y  1 - Piedra
-        if ($jugador1 == 2 && $jugador2 == 3)
-        { return 2; } // 2 - Papel y  3 - Tijeras
-        if ($jugador1 == 3 && $jugador2 == 1)
-        { return 1; } // 3 - Papel y  1 - Piedra
-        if ($jugador1 == 3 && $jugador2 == 2)
-        { return 2; } // 3 - Papel y  2 - Papel
-        
-    }
-        
-    // Salida hacia derecha de PIEDRA1
-    function pintaSalidaDerecha ($salida) {
-
-        switch ($salida) {
-            case 1:
-                return PIEDRA1;
-            case 2:
-                return PAPEL;
-            case 3:
-                return TIJERAS;
+        // 2. Generamos el array con los resultados
+        function resultados ()
+        {
+            for ($i = 0; $i < count(arrayDados); $i++) {
+                    $dado = random_int(1, 6);
+                    $arrayDadosResultado[] = $dado;
+                }
+                return $arrayDadosResultado;
         }
-    }
 
-    //Salida hacia izquierda de PIEDRA2
-    function pintaSalidaIzquierda ($salida) {
+        // 3. Hacemos los resultados
+        function sumaResultado ($resultado)
+        {
+            $mayor = max($resultado);
+            $menor = min($resultado);
+            $mayorPasado = 2; // Ponemos 2 debido a que son los dados que
+            $menorPasado = 2; // vamos a sacar fuera debido al juego
+            $suma = 0;
 
-        switch ($salida) {
-            case 1:
-                return PIEDRA2;
-            case 2:
-                return PAPEL;
-            case 3:
-                return TIJERAS;
+            // 3B. Sistema para cotejar que el valor más grande (mayor) y el valor más pequeño (menor) se
+            // guarda en menorPasado y mayorPasado para que vaya pasando el array.
+            foreach ($resultado as $value) {
+                $mayorPasado = ($value == $mayor) ? $mayorPasado - 1 : $mayorPasado;
+                $menorPasado = ($value == $menor) ? $menorPasado - 1 : $menorPasado;
+                if ($value != $mayor && $value != $menor) {
+                    $suma += $value;
+                } elseif ($value == $mayor && $mayorPasado < 1) {
+                    $suma += $value;
+                } elseif ($value == $menor && $menorPasado < 1) {
+                    $suma += $value;
+                }
+            }
+
+            return $suma;
         }
-    }
 
-    function generaMensaje($tirada) {
+        // 4. Recorremos el array y ponemos el valor del dado con su respectivo dado (mirar parte 1).
+        function pintaDados ($resultado)
+        {
+            foreach ($resultado as $key => $value) {
+                $dado = arrayDados[$value];
+                echo ("$dado");
+            }
+        }
 
-       $mensaje=($tirada==0)?"Empate":"El ganador es el jugador  $tirada";
-       return $mensaje;
-    }
+        // 5. Generamos el sistema de partida para saber quién es el ganador.
+        // Si sale 0 retornamos 0 (empate), si sale más gana jugador 
+        // 1 y si sale menos gana jugador 2.
+        function partida ($suma1, $suma2)
+        {
+            $retorno = null;
+            $resultadoPartida = $suma2 - $suma1;
+            if ($resultadoPartida == 0) {
+                return 0;
+            }
+            $retorno = ($resultadoPartida < 0) ? 1 : 2;
+            return $retorno;
+        }
 
+        // 6. Pintamos el mensaje 
+        function colorMensaje ($partida)
+        {
+            return ARRAYMENSAJES[$partida];
+        }
+
+        // 7. Funciones principales
+        $jugador1 = resultados(); // 7a. Sacamos los valores
+        $jugador2 = resultados();
+
+        $suma1 = sumaResultado($jugador1); // 7b. Sacamos la suma
+        $suma2 = sumaResultado($jugador2);
+
+        $partida = partida($suma1, $suma2); // 7c. Sacamos la partida
+
+        $color = colorVencedor($partida); // 7d. Sacamos el color final
+
+        // 8. Sacamos el color final desde 7d
+        function colorVencedor($partida)
+        {
+            switch ($partida) {
+                case 0:
+                    return "green";
+                case 1:
+                    return "blue";
+                case 2:
+                    return "orange";
+            }
+        }
 
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -82,37 +112,45 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Los cinco dados</title>
     <style>
-        td{
-            font-size: 125px;
+        body {
+            font-size: 40px;
         }
-        .mensajeJugador{
-            font-size: 100px;
+
+        .jugador1 {
+            font-size: 30px;
+            color: blue;
+            margin: 5px 2px 2px 5px;
         }
-        .mensaje{
-            font-size: 50px;
+
+        .jugador2 {
+            font-size: 30px;
+            color: orange;
+            margin: 5px 2px 2px 5px
+        }
+
+        .resultado {
+            color: <?= $color ?>
         }
     </style>
-    <title> ¡Piedra, papel o tijera! </title>
 </head>
 
 <body>
     <table>
-        <tr>
-            <td class="jugador1">
-                <div class="mensajeJugador">Jugador 1</div>
-                <?= $pinta1 ?> <!-- Pintamos la derecha !-->
-            </td>
-                <td class="jugador2">
-                <div class="mensajeJugador">Jugador 2</div>
-                <?= $pinta2 ?> <!-- Pintamos la izquierda !-->
-            </td>
+        <tr class="jugador1">
+            <td> Jugador 1 --------> </td>
+            <td><?php pintaDados($jugador1); ?></td>
+            <td><?= "¡" . $suma1 . " puntos!"  ?></td>
+        </tr>
+        <tr class="jugador2">
+            <td> Jugador 2 --------> </td>
+            <td><?php pintaDados($jugador2); ?></td>
+            <td><?= "¡" . $suma2 . " puntos!"  ?></td>
         </tr>
         <tr>
-            <td class="mensaje" colspan="2"><?=$mensaje ?></td>
-            <!-- Sacamos el mensaje de victoria !-->
+            <td class="resultado"> <?= colorMensaje($partida) ?></td>
         </tr>
     </table>
 </body>
-
 </html>
